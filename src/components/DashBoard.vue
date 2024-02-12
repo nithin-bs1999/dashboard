@@ -34,7 +34,7 @@
               href="#"
               class="btn btn-outline-success me-3"
               data-bs-toggle="modal"
-              data-bs-target="#storyAddModal"
+              data-bs-target="#userAddModal"
               >Add</a
             >
           </div>
@@ -50,6 +50,7 @@
                       <th>Name</th>
                       <th>Email</th>
                       <th>Phone</th>
+                      <th>Edit</th>
                       <th>Delete</th>
                     </tr>
                   </thead>
@@ -61,7 +62,17 @@
                       <td>{{ user.phone }}</td>
                       <td>
                         <button
-                          class="btn btn-secondary bi bi-trash"
+                          class="btn btn-primary"
+                          data-bs-toggle="modal"
+                          data-bs-target="#userEditModal"
+                          @click="editUser(user.id)"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-secondary"
                           @click="deleteUser(user.id)"
                         >
                           Delete
@@ -80,17 +91,17 @@
 
   <div
     class="modal fade modal-lg"
-    id="storyAddModal"
+    id="userAddModal"
     data-bs-backdrop="static"
     data-bs-keyboard="false"
     tabindex="-1"
-    aria-labelledby="storyAddModalLabel"
+    aria-labelledby="userAddModalLabel"
     aria-hidden="true"
   >
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="storyAddModalLabel">Add new user</h5>
+          <h5 class="modal-title" id="userAddModallLabel">Add new user</h5>
           <button
             type="button"
             class="btn-close"
@@ -165,11 +176,95 @@
       </div>
     </div>
   </div>
+
+  <div
+    class="modal fade modal-lg"
+    id="userEditModal"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="userEditModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userEditModalLabel">Edit User</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="container">
+            <form>
+              <div class="mb-3">
+                <label for="id" class="form-label">ID</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="id"
+                  v-model="userDetails.id"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name"
+                  v-model="userDetails.name"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="phone" class="form-label">Phone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="phone"
+                  v-model="userDetails.phone"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  v-model="userDetails.email"
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            data-bs-dismiss="modal"
+            @click="updateUser"
+            class="btn btn-primary"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 import { useStore } from "vuex";
-import { computed, reactive } from "vue";
+import { computed, ref } from "vue";
 import UserService from "@/services/UserService";
 
 const userService = new UserService();
@@ -179,12 +274,16 @@ export default {
   setup() {
     const store = useStore();
 
-    const userDetails = reactive({
+    const userDetails = ref({
       id: "",
       name: "",
       email: "",
       phone: "",
     });
+
+    store.dispatch("getAllUsers");
+
+    const allUsers = computed(() => store.getters.allUsers);
 
     const addUser = () => {
       userService.addUser(userDetails).then(() => {
@@ -198,11 +297,19 @@ export default {
       });
     };
 
-    store.dispatch("getAllUsers");
+    const editUser = (id) => {
+      userService.getSingleUser(id).then((response) => {
+        userDetails.value = response.data;
+      });
+    };
 
-    const allUsers = computed(() => store.getters.allUsers);
+    const updateUser = () => {
+      userService.editUser(userDetails.value).then(() => {
+        store.dispatch("getAllUsers");
+      });
+    };
 
-    return { allUsers, userDetails, addUser, deleteUser };
+    return { allUsers, userDetails, addUser, deleteUser, editUser, updateUser };
   },
 };
 </script>
