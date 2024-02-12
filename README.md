@@ -15,7 +15,9 @@ npm run serve
 ### Run DB
 
 goto mixins folder and then run
+```
 json-server --watch db.json --port 3000
+```
 
 ### Compiles and minifies for production
 
